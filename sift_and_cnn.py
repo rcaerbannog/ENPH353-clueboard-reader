@@ -12,6 +12,7 @@ clue_banner_template = cv.imread("clue-banner-filled.png", cv.IMREAD_GRAYSCALE)
 img_target = clue_banner_template
 sift = cv.SIFT_create()
 keypoints_target, descriptors_target = sift.detectAndCompute(img_target, None)
+MIN_GOOD_MATCHES = 20
 
 # LETTER READING SETUP
 letter_thresh_minHSV = (int(230/2), 10, 0)
@@ -48,8 +49,6 @@ def flannMatcher(keypoints_search, descriptors_search):
 # @param frame (np.ndarray) A cv2-compatible BGR image (i.e. same format as cv2.imread(), or from cvBridge)
 # @ return (np.ndarray OR None) an image of the same dimensions of 'clue-banner-filled.png', or `None`
 def clueboard_img_from_frame(frame):
-    MIN_GOOD_MATCHES = 20
-
     if len(frame.shape) == 2:
         frame_gray = frame
     else:
