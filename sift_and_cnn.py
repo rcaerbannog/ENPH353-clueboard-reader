@@ -12,7 +12,7 @@ clue_banner_template = cv.imread("clue-banner-filled.png", cv.IMREAD_GRAYSCALE)
 img_target = clue_banner_template
 sift = cv.SIFT_create()
 keypoints_target, descriptors_target = sift.detectAndCompute(img_target, None)
-MIN_GOOD_MATCHES = 20
+MIN_GOOD_MATCHES = 10
 
 # LETTER READING SETUP
 letter_thresh_minHSV = (int(230/2), 10, 0)
