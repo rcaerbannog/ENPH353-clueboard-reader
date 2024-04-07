@@ -112,8 +112,11 @@ def text_from_line_image(img_BGR):
     text = model_wrapper(letter_imgs_arr)
     return text
 
-# Clue type and value
-# Image must be SIFTed to match clueboard template size
+## Clue type and value from clueboard image in same shape as `clue-banner-filled.png`. 
+# Image must be SIFTed to match clueboard template size. 
+# Correctness not guaranteed.
+# @param clueboard_img (np.ndarray) a cv2-BGR-compatible SIFTed clueboard image in same shape as `clue-banner-filled.png`
+# @return a 2-tuple of (clue_type, clue_value), where the entries may be a string or None if no text detected (possibly one each)
 def clue_type_and_value(clueboard_img):
     # First, split image into type and image sections
     clue_type_img = clueboard_img[35:115, 240:580]
