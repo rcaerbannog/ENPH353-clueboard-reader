@@ -1,3 +1,6 @@
 /.enph353env
 /train/*-letters
 /train/*.keras
+/train/*.h5
+/test-images/good-clues/*-sifted
+*__pycache__
