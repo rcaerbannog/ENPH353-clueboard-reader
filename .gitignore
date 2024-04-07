@@ -4,3 +4,4 @@
 /train/*.h5
 /test-images/good-clues/*-sifted
 *__pycache__
+local-results/

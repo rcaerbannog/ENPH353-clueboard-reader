@@ -15,7 +15,7 @@ keypoints_target, descriptors_target = sift.detectAndCompute(img_target, None)
 MIN_GOOD_MATCHES = 10
 
 # LETTER READING SETUP
-letter_thresh_minHSV = (int(230/2), 10, 0)
+letter_thresh_minHSV = (int(230/2), 128, 0)
 letter_thresh_maxHSV = (int(250/2), 255, 255)
 LETTER_IMG_DIM_Y = 80
 LETTER_IMG_DIM_X = 64
