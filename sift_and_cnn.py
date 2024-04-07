@@ -101,6 +101,12 @@ def text_from_line_image(img_BGR):
     letter_imgs = []
     for bounding_rect in bounding_rects_ext:
         # NOTE: for existing network, must use solid image, and not outline. 
+
+        # NOTE: Changed 2024-04-07: if a bounding box exceeds the letter image shape, return none (to avoid broadcasting error)
+        # TODO: Reduce chances of this error by appropriate image pre-processing
+        if (bounding_rect[2] > LETTER_IMG_DIM_X or bounding_rect[3] > LETTER_IMG_DIM_Y):
+            return f'ERROR: TOO LARGE BOUNDING BOX DETECTED {bounding_rect}'
+        
         subimg = np.copy(img_mask[bounding_rect[1] : bounding_rect[1] + bounding_rect[3], bounding_rect[0] : bounding_rect[0] + bounding_rect[2]])
         letter_img = np.zeros(LETTER_IMG_SHAPE, dtype=np.uint8)
         start_x = (LETTER_IMG_DIM_X - bounding_rect[2]) // 2
