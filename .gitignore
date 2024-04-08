@@ -3,5 +3,7 @@
 /train/*.keras
 /train/*.h5
 /test-images/good-clues/*-sifted
+/test-images/good-clues/*-type
+/test-images/good-clues/*-value
 *__pycache__
 local-results/
