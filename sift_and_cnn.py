@@ -20,6 +20,7 @@ letter_thresh_maxHSV = (int(250/2), 255, 255)
 LETTER_IMG_DIM_Y = 80
 LETTER_IMG_DIM_X = 64
 LETTER_IMG_SHAPE = (LETTER_IMG_DIM_Y, LETTER_IMG_DIM_X)
+MIN_LETTER_HEIGHT = 20
 
 # IMPORT LETTER-RECOGNITION CNN
 model = models.load_model('letter-recog-model.keras')
@@ -74,14 +75,29 @@ def clueboard_img_from_frame(frame):
 
 
 # returns text corresponding to array letter_imgs in order (may give incorrect result)
-# image must be of shape (LETTER_DIM_Y, LETTER_DIM_X)
+# images must be of shape (LETTER_DIM_Y, LETTER_DIM_X)
+# for empty array, returns empty string
 # NOTE: Consider adding a CONFIDENCE check (sth like RANSAC ratio test)
 def model_wrapper(letter_imgs):
-    predictions = model.predict(letter_imgs)
-    text = ''
-    for prediction in predictions:
-        text += chr(ord('A') + np.argmax(prediction))
-    return text
+    if len(letter_imgs) == 0: 
+        return ''
+    else:
+        predictions = model.predict(letter_imgs)
+        text = ''
+        for prediction in predictions:
+            text += chr(ord('A') + np.argmax(prediction))
+        return text
+
+def box_contains_letter(bounding_rect):
+    x, y, w, h = bounding_rect
+    # Failure conditions:
+    # 1) box exceeds letter image size (cannot squeeze larger array into smaller one)
+    # 2) height is way too small (likely a small artifact)
+    # 3) box touches edges (likely a blue border contour)
+    return not (w > LETTER_IMG_DIM_X or h > LETTER_IMG_DIM_Y 
+                or h < MIN_LETTER_HEIGHT 
+                or x == 0 or y == 0 or x+w == LETTER_IMG_DIM_X - 1 or y + h == LETTER_IMG_DIM_Y - 1)
+
 
 ## API Method
 # Takes a clueboard subimage with a line of text (capital letters A-Z in Ubuntu Monospace font ~size 90) and returns the text on that image
@@ -95,23 +111,21 @@ def text_from_line_image(img_BGR):
     img_mask = cv.inRange(img_HSV, letter_thresh_minHSV, letter_thresh_maxHSV)
     contours_ext, hierarchy_ext = cv.findContours(img_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     bounding_rects_ext = [cv.boundingRect(contour) for contour in contours_ext]
+    bounding_rects_ext = sorted(list(filter(box_contains_letter, bounding_rects_ext)))
     # contours_ext_sorted = sorted(contours_ext, key=cv.boundingRect, reverse=True)
-    bounding_rects_ext.sort()
 
     letter_imgs = []
     for bounding_rect in bounding_rects_ext:
         # NOTE: for existing network, must use solid image, and not outline. 
-
         # NOTE: Changed 2024-04-07: if a bounding box exceeds the letter image shape, return none (to avoid broadcasting error)
-        # TODO: Reduce chances of this error by appropriate image pre-processing
-        if (bounding_rect[2] > LETTER_IMG_DIM_X or bounding_rect[3] > LETTER_IMG_DIM_Y):
-            return f'ERROR: TOO LARGE BOUNDING BOX DETECTED {bounding_rect}'
+        # NOTE: Changed 2024-04-09: filtered out bad bounding boxes in bounding_rects_ext a few lines before
+        x, y, w, h = bounding_rect
         
-        subimg = np.copy(img_mask[bounding_rect[1] : bounding_rect[1] + bounding_rect[3], bounding_rect[0] : bounding_rect[0] + bounding_rect[2]])
+        subimg = np.copy(img_mask[y:y+h, x:x+w])
         letter_img = np.zeros(LETTER_IMG_SHAPE, dtype=np.uint8)
-        start_x = (LETTER_IMG_DIM_X - bounding_rect[2]) // 2
-        start_y = (LETTER_IMG_DIM_Y - bounding_rect[3]) // 2
-        letter_img[start_y : start_y + bounding_rect[3], start_x : start_x + bounding_rect[2]] = subimg
+        start_x = (LETTER_IMG_DIM_X - w) // 2
+        start_y = (LETTER_IMG_DIM_Y - h) // 2
+        letter_img[start_y : start_y + h, start_x : start_x + w] = subimg
         letter_imgs.append(letter_img)
 
     letter_imgs_arr = np.array(letter_imgs).reshape(-1, LETTER_IMG_DIM_Y, LETTER_IMG_DIM_X)
@@ -125,6 +139,8 @@ def text_from_line_image(img_BGR):
 # @return a 2-tuple of (clue_type, clue_value), where the entries may be a string or None if no text detected (possibly one each)
 def clue_type_and_value(clueboard_img):
     # First, split image into type and image sections
+    # NOTE: 2024-04-09: expanding the slice occasionally causes letters to drop out??? 
+    # TODO: Check reasons why contours are being discarded!!!
     clue_type_img = clueboard_img[35:115, 240:580]
     clue_value_img = clueboard_img[255:335, 20:580]
 
