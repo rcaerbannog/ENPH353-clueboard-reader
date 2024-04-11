@@ -1,3 +1,4 @@
+.vscode/
 /.enph353env
 /.venv
 /train/*-letters
