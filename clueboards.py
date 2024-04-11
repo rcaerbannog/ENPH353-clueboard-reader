@@ -12,7 +12,7 @@ LETTER_IMG_SHAPE = (LETTER_IMG_DIM_Y, LETTER_IMG_DIM_X)
 MIN_LETTER_HEIGHT = 20
 
 # IMPORT LETTER-RECOGNITION CNN
-model = models.load_model('letter-recog-model.h5')
+# model = models.load_model('letter-recog-model.h5')
 
 def is_good_clueboard_contour(contour, in_frame):
     frame_dimY = in_frame.shape[0]
