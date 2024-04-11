@@ -1,4 +1,5 @@
 /.enph353env
+/.venv
 /train/*-letters
 /train/*.keras
 /train/*.h5
